@@ -23,7 +23,7 @@ $ python
 >>> model = main()
 >>> # Now you can make predictions. Input features are as follows:
 >>> # (quarter, minute, second, points offense, points defense,
->>> #     down, t.o.l. offense, t.o.l. defense, yards to go,
+>>> #     t.o.l. offense, t.o.l. defense, yards to go, down,
 >>> #     yards from own goal)
 >>>
 >>> # Here is an example of a call to predict, where the model
