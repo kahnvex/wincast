@@ -16,7 +16,8 @@ def create_baseline():
 
     # create model
     model = Sequential()
-    model.add(Dense(30, input_dim=8, init='normal', activation='relu'))
+    model.add(Dense(30, input_dim=10, init='normal', activation='relu'))
+    model.add(Dense(30, init='normal', activation='relu'))
     model.add(Dense(1, init='normal', activation='sigmoid'))
 
     # Compile model
@@ -29,7 +30,18 @@ def main(verbose=0):
     estimators = []
     plays = pd.read_csv('./data/Xy.csv')
 
-    X = plays.loc[:, ['qtr', 'min', 'sec', 'ptso', 'ptsd', 'dwn', 'ytg', 'yfog']]
+    X = plays.loc[:, [
+        'qtr',
+        'min',
+        'sec',
+        'ptso',
+        'ptsd',
+        'timo',
+        'timd',
+        'dwn',
+        'ytg',
+        'yfog'
+    ]]
     y = plays.loc[:, 'y']
 
     estimators.append(('standardize', preprocessing.StandardScaler()))

@@ -39,6 +39,8 @@ def main():
         'sec',
         'ptso',
         'ptsd',
+        'timo',
+        'timd',
         'dwn',
         'ytg',
         'yfog'
