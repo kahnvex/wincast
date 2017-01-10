@@ -22,12 +22,13 @@ $ python
 >>>
 >>> model = main()
 >>> # Now you can make predictions. Input features are as follows:
->>> # (quarter, minute, second, points offense, points defense, down,
->>> # ...yards to go, yards from own goal)
+>>> # (quarter, minute, second, points offense, points defense,
+>>> #     down, t.o.l. offense, t.o.l. defense, yards to go,
+>>> #     yards from own goal)
 >>>
 >>> # Here is an example of a call to predict, where the model
 >>> # forecasts a win for the team on offense:
->>> model.predict([[4, 0, 5, 20, 7, 1, 2, 20]])
+>>> model.predict([[4, 0, 5, 20, 7, 3, 2, 1, 2, 20]])
 array([[1]], dtype=int32)
 
 >>> # Get the probability of each class 0/1:
