@@ -18,7 +18,7 @@ offense team.
 $ pip install -r requirements.txt
 $ python
 >>> import numpy as np
->>> from winprob.train import main
+>>> from wincast.train import main
 >>>
 >>> model = main()
 >>> # Now you can make predictions. Input features are as follows:
