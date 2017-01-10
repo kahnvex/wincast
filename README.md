@@ -10,7 +10,8 @@ command line.
 
 The model will predict whether or not the offense team will win.
 An output of `1` means the model is forecasting a win for the offense
-team. A `0` means the offense team will lose (or tie).
+team. A `0` means the model is forecast a loss (or tie) for the
+offense team.
 
 
 ```sh
