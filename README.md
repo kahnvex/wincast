@@ -32,6 +32,6 @@ $ python
 array([[1]], dtype=int32)
 
 >>> # Get the probability of each class 0/1:
->>> model.predict_proba(np.array([[4, 0, 5, 20, 7, 1, 2, 20]]))
+>>> model.predict_proba(np.array([[4, 0, 5, 20, 7, 3, 2, 1, 2, 20]]))
 array([[ 0.00880867,  0.99119133]], dtype=float32)
 ```
