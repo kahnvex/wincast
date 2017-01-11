@@ -18,9 +18,10 @@ offense team.
 $ pip install -r requirements.txt
 $ python
 >>> import numpy as np
->>> from wincast.train import main
+>>> from wincast.train import Trainer
 >>>
->>> model = main()
+>>> model = Trainer()
+>>> model.train()
 >>> # Now you can make predictions. Input features are as follows:
 >>> # (quarter, minute, second, points offense, points defense,
 >>> #     t.o.l. offense, t.o.l. defense, down, yards to go,
