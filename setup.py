@@ -21,7 +21,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name="wincast",
-    version=0.0.1,
+    version='0.0.1',
     url='https://github.com/kahnjw/wincast',
     author_email='thomas.welfley+djproxy@gmail.com',
     long_description=readme,
