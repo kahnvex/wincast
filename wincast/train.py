@@ -16,7 +16,7 @@ from keras.wrappers.scikit_learn import KerasClassifier
 
 from sklearn import preprocessing
 from sklearn.externals import joblib
-from sklearn.metrics import precision_recall_fscore_support, roc_curve
+from sklearn.metrics import auc, precision_recall_fscore_support, roc_curve
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
