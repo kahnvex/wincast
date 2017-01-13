@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+
 install_requires = [
     'dill==0.2.5',
     'easydict==1.6',
@@ -20,7 +21,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name="wincast",
-    version=__version__,
+    version=0.0.1,
     url='https://github.com/kahnjw/wincast',
     author_email='thomas.welfley+djproxy@gmail.com',
     long_description=readme,
