@@ -28,4 +28,8 @@ setup(
     license='MIT',
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=install_requires,
+    data_files=[
+        ('models', ['models/wincast.model.h5', 'wincast.scaler.pkl']) ,
+        ('data', ['data/Xy.csv'])
+    ]
 )
