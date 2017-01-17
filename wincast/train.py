@@ -30,9 +30,13 @@ class Trainer(object):
             self.args = self.get_args()
 
     def get_args(self, args=None):
+        playdata = os.path.join(sys.prefix, 'src/master/data/Xy.csv')
+        playdata = os.path.normpath(playdata)
+
+
         parser = ap.ArgumentParser(description='Train wincast')
 
-        parser.add_argument('--playdata', '-p', type=str, default='./data/Xy.csv')
+        parser.add_argument('--playdata', '-p', type=str, default=playdata)
         parser.add_argument('--nb_epoch', '-e', type=int, default=2)
         parser.add_argument('--verbose', '-v', default=False, action='store_true')
 
