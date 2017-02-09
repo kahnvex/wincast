@@ -7,12 +7,14 @@ import pandas as pd
 import sys
 
 from itertools import chain
-
 from jsonpickle.ext import numpy as jsonpickle_numpy
 
+from keras import callbacks
 from keras.models import Sequential, load_model
-from keras.layers import Dense
+from keras.layers import BatchNormalization, Dense, Dropout, PReLU
 from keras.wrappers.scikit_learn import KerasClassifier
+
+from tabulate import tabulate
 
 from sklearn import preprocessing
 from sklearn.externals import joblib
@@ -30,18 +32,20 @@ class Trainer(object):
             self.args = self.get_args()
 
     def get_args(self, args=None):
-        playdata = os.path.join(sys.prefix, 'src/master/data/Xy.csv')
-        playdata = os.path.normpath(playdata)
-
+        playdata = 'data/Xy.csv'
 
         parser = ap.ArgumentParser(description='Train wincast')
 
         parser.add_argument('--playdata', '-p', type=str, default=playdata)
-        parser.add_argument('--nb_epoch', '-e', type=int, default=2)
+        parser.add_argument('--nb-epoch', '-e', type=int, default=2)
         parser.add_argument('--verbose', '-v', default=False, action='store_true')
-
+        parser.add_argument('--batch-size', '-b', type=int, default=128)
         parser.add_argument('--outdir', '-o', default=False)
         parser.add_argument('--indir', '-i', default=False)
+        parser.add_argument('--monitor', '-m', action='store_true', default=False)
+        parser.add_argument('--evaluate', action='store_true', default=False)
+        parser.add_argument('--format', default='table', choices=('table', 'csv'))
+        parser.add_argument('--headers', action='store_true', default=False)
 
         return parser.parse_args(args=args)
 
@@ -56,8 +60,17 @@ class Trainer(object):
 
         # create model
         model = Sequential()
-        model.add(Dense(30, input_dim=10, init='normal', activation='relu'))
-        model.add(Dense(30, init='normal', activation='relu'))
+
+        model.add(Dense(30, input_dim=12, init='normal', activation='relu'))
+        model.add(BatchNormalization())
+        model.add(PReLU())
+        model.add(Dropout(0.5))
+
+        model.add(Dense(15, init='normal', activation='relu'))
+        model.add(BatchNormalization())
+        model.add(PReLU())
+        model.add(Dropout(0.5))
+
         model.add(Dense(1, init='normal', activation='sigmoid'))
 
         # Compile model
@@ -93,7 +106,9 @@ class Trainer(object):
             'timd',
             'dwn',
             'ytg',
-            'yfog'
+            'yfog',
+            'ou',
+            'pts_s',
         ]]
 
         y = plays.loc[:, 'y']
@@ -107,23 +122,34 @@ class Trainer(object):
         self.X_test, self.y_test = X_test, y_test
 
         self.model = self.create_baseline()
+        
+        train_callbacks = []
+
+        if self.args.evaluate:
+            train_callbacks.append(callbacks.CSVLogger('evaluate/training.csv'))
+
         self.model.fit(X_train, y_train.as_matrix(),
-                       nb_epoch=self.args.nb_epoch, verbose=self.args.verbose)
+                       batch_size=self.args.batch_size,
+                       nb_epoch=self.args.nb_epoch,
+                       verbose=self.args.verbose,
+                       callbacks=train_callbacks)
+
+        if self.args.evaluate:
+            self.evaluate(X_test, y_test)
 
         if self.args.outdir:
             self.write()
 
         gc.collect()
 
+    def evaluate(self, X, y):
+        evaluation = self.model.evaluate(X, y.as_matrix())
 
-    def evaluate(self):
-        y_test_pred = self.model.predict(self.X_test)
-        y_test_pred = y_test_pred > 0.5
+        with open('evaluate/cv.csv', 'w+') as cv:
+            cv.write(','.join(self.model.metrics_names))
+            cv.write(os.linesep)
+            cv.write(','.join(map(str, evaluation)))
 
-        prf = precision_recall_fscore_support(self.y_test, y_test_pred)
-        roc = roc_curve(self.y_test, y_test_pred)
-
-        return prf, roc
 
     def _check_model(self):
         if not getattr(self, 'model', None):
