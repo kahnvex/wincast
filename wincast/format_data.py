@@ -25,10 +25,26 @@ def off_win(row, games_df):
             row['off'], row['def'], score['v'], score['h']))
 
 
+def get_ou(row, games_df):
+    game = games_df.iloc[row.loc['gid'] - 1]
+
+    return game.ou
+
+
+def get_off_pt_spread(row, games_df):
+    games = games_df.iloc[row.loc['gid'] - 1]
+
+    if games.v == row.off:
+        return games.sprv
+    elif games.v == row['def']:
+        return -int(games.sprv)
+        
+
+
 
 def main():
-    plays_df = pd.read_csv('./data/raw/csv/PLAY.csv')
-    games_df = pd.read_csv('./data/raw/csv/GAME.csv')
+    plays_df = pd.read_csv('./data/raw/PLAY.csv')
+    games_df = pd.read_csv('./data/raw/GAME.csv')
 
     plays_df = plays_df.loc[:, [
         'gid',
@@ -46,6 +62,9 @@ def main():
         'yfog'
     ]]
 
+    plays_df['ou'] = plays_df.apply(lambda row: get_ou(row, games_df), axis=1)
+    plays_df['pts_s'] = plays_df.apply(
+        lambda row: get_off_pt_spread(row, games_df), axis=1)
     plays_df['y'] = plays_df.apply(lambda row: off_win(row, games_df), axis=1)
     plays_df.to_csv('./data/Xy.csv')
 
