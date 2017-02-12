@@ -20,7 +20,7 @@ from sklearn import preprocessing
 from sklearn.externals import joblib
 from sklearn.metrics import auc, precision_recall_fscore_support, roc_curve
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
+from sklearn.utils import shuffle
 
 
 class Trainer(object):
@@ -46,6 +46,7 @@ class Trainer(object):
         parser.add_argument('--evaluate', action='store_true', default=False)
         parser.add_argument('--format', default='table', choices=('table', 'csv'))
         parser.add_argument('--headers', action='store_true', default=False)
+        parser.add_argument('--board', action='store_true', default=False)
 
         return parser.parse_args(args=args)
 
@@ -61,7 +62,7 @@ class Trainer(object):
         # create model
         model = Sequential()
 
-        model.add(Dense(30, input_dim=12, init='normal', activation='relu'))
+        model.add(Dense(30, input_dim=13, init='normal', activation='relu'))
         model.add(BatchNormalization())
         model.add(PReLU())
         model.add(Dropout(0.5))
@@ -87,16 +88,8 @@ class Trainer(object):
             self.args.indir, 'wincast.scaler.pkl')))
 
 
-    def train(self):
-        if self.args.indir:
-            self.read()
-            gc.collect()
-            return
-
-        estimators = []
-        plays = pd.read_csv(self.args.playdata)
-
-        X = plays.loc[:, [
+    def get_features(self, X):
+        return X.loc[:, [
             'qtr',
             'min',
             'sec',
@@ -109,14 +102,34 @@ class Trainer(object):
             'yfog',
             'ou',
             'pts_s',
+            'off_h',
         ]]
 
-        y = plays.loc[:, 'y']
+
+    def train(self):
+        if self.args.indir:
+            self.read()
+            gc.collect()
+            return
 
         self.scaler = preprocessing.StandardScaler()
-        X = self.scaler.fit_transform(X, y)
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+        X = pd.read_csv(self.args.playdata) 
+        X_train = X.loc[~X['seas'].isin([2000, 2007, 2015])] 
+        X_test = X.loc[X['seas'].isin([2000, 2007, 2015])]
+
+        y_train = X_train.loc[:, 'y']
+        y_test = X_test.loc[:, 'y']
+        
+        X_train = self.get_features(X_train)
+        X_test = self.get_features(X_test) 
+
+        
+        X_train = self.scaler.fit_transform(X_train, y_train)
+        X_test = self.scaler.transform(X_test)
+
+        
+        X_train, y_train = shuffle(X_train, y_train)
 
         self.X_train, self.y_train = X_train, y_train
         self.X_test, self.y_test = X_test, y_test
@@ -127,6 +140,13 @@ class Trainer(object):
 
         if self.args.evaluate:
             train_callbacks.append(callbacks.CSVLogger('evaluate/training.csv'))
+        
+        if self.args.board:
+            tb_cb = callbacks.TensorBoard(
+                log_dir='evaluate/board/', histogram_freq=0,
+                write_graph=True, write_images=False)
+            train_callbacks.append(tb_cb)
+
 
         self.model.fit(X_train, y_train.as_matrix(),
                        batch_size=self.args.batch_size,
