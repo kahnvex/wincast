@@ -32,14 +32,24 @@ def get_ou(row, games_df):
 
 
 def get_off_pt_spread(row, games_df):
-    games = games_df.iloc[row.loc['gid'] - 1]
+    game = games_df.iloc[row.loc['gid'] - 1]
 
-    if games.v == row.off:
-        return games.sprv
-    elif games.v == row['def']:
-        return -int(games.sprv)
+    if game.v == row.off:
+        return game.sprv
+    elif game.v == row['def']:
+        return -int(game.sprv)
         
 
+def off_home(row, games_df):
+    game = games_df.iloc[row.loc['gid'] - 1]
+
+    return 1 if game.h == row.off else 0
+
+
+def seas(row, games_df):
+    game = games_df.iloc[row.loc['gid'] - 1]
+
+    return game.seas
 
 
 def main():
@@ -65,6 +75,9 @@ def main():
     plays_df['ou'] = plays_df.apply(lambda row: get_ou(row, games_df), axis=1)
     plays_df['pts_s'] = plays_df.apply(
         lambda row: get_off_pt_spread(row, games_df), axis=1)
+    plays_df['off_h'] = plays_df.apply(
+        lambda row: off_home(row, games_df), axis=1)
+    plays_df['seas'] = plays_df.apply(lambda row: seas(row, games_df), axis=1)
     plays_df['y'] = plays_df.apply(lambda row: off_win(row, games_df), axis=1)
     plays_df.to_csv('./data/Xy.csv')
 
