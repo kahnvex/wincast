@@ -57,3 +57,4 @@ traitlets==4.3.1
 wcwidth==0.1.7
 widgetsnbextension==1.2.6
 tabulate==0.7.7
+tabulate==0.7.7
