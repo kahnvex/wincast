@@ -62,12 +62,17 @@ class Trainer(object):
         # create model
         model = Sequential()
 
-        model.add(Dense(30, input_dim=13, init='normal', activation='relu'))
+        model.add(Dense(64, input_dim=13, init='normal', activation='relu'))
         model.add(BatchNormalization())
         model.add(PReLU())
         model.add(Dropout(0.5))
 
-        model.add(Dense(15, init='normal', activation='relu'))
+        model.add(Dense(32, init='normal', activation='relu'))
+        model.add(BatchNormalization())
+        model.add(PReLU())
+        model.add(Dropout(0.5))
+
+        model.add(Dense(16, init='normal', activation='relu'))
         model.add(BatchNormalization())
         model.add(PReLU())
         model.add(Dropout(0.5))
@@ -115,8 +120,8 @@ class Trainer(object):
         self.scaler = preprocessing.StandardScaler()
 
         X = pd.read_csv(self.args.playdata) 
-        X_train = X.loc[~X['seas'].isin([2000, 2007, 2015])] 
-        X_test = X.loc[X['seas'].isin([2000, 2007, 2015])]
+        X_train = X.loc[~X['seas'].isin([2001, 2008, 2016])] 
+        X_test = X.loc[X['seas'].isin([2001, 2008, 2016])]
 
         y_train = X_train.loc[:, 'y']
         y_test = X_test.loc[:, 'y']
