@@ -14,6 +14,7 @@ install_requires = [
     'scipy==0.18.1',
     'tensorflow==0.12.0rc1',
     'Theano==0.8.2',
+    'tabulate==0.7.7',
 ]
 
 with open('README.md', 'r') as f:
