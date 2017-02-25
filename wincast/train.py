@@ -62,17 +62,17 @@ class Trainer(object):
         # create model
         model = Sequential()
 
-        model.add(Dense(64, input_dim=13, init='normal', activation='relu'))
-        model.add(BatchNormalization())
-        model.add(PReLU())
-        model.add(Dropout(0.5))
-
-        model.add(Dense(32, init='normal', activation='relu'))
+        model.add(Dense(32, input_dim=13, init='normal', activation='relu'))
         model.add(BatchNormalization())
         model.add(PReLU())
         model.add(Dropout(0.5))
 
         model.add(Dense(16, init='normal', activation='relu'))
+        model.add(BatchNormalization())
+        model.add(PReLU())
+        model.add(Dropout(0.5))
+
+        model.add(Dense(8, init='normal', activation='relu'))
         model.add(BatchNormalization())
         model.add(PReLU())
         model.add(Dropout(0.5))
