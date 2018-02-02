@@ -1,6 +1,6 @@
 # wincast
 
-A Real Time Win Forecasting System for the NFL
+A win forecasting model for the NFL
 
 Note: This package is still under development.
 For now, you can play around with it via the

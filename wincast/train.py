@@ -1,18 +1,18 @@
 import argparse as ap
-import gc
-import numpy as pd
+import numpy as np
+import pandas as pd
 import os
 
+from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import train_test_split
 
 from itertools import chain
-
-from keras import callbacks
-from keras.models import Sequential, load_model
-from keras.layers import BatchNormalization, Dense, Dropout, PReLU
 
 from sklearn import preprocessing
 from sklearn.externals import joblib
 from sklearn.utils import shuffle
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.pipeline import Pipeline
 
 
 class Trainer(object):
@@ -28,20 +28,10 @@ class Trainer(object):
 
         parser = ap.ArgumentParser(description='Train wincast')
 
+        parser.add_argument('--search-iter', type=int, default=32)
         parser.add_argument('--playdata', '-p', type=str, default=playdata)
-        parser.add_argument('--nb-epoch', '-e', type=int, default=2)
-        parser.add_argument('--verbose', '-v', default=False,
-                            action='store_true')
-        parser.add_argument('--batch-size', '-b', type=int, default=128)
         parser.add_argument('--outdir', '-o', default=False)
         parser.add_argument('--indir', '-i', default=False)
-        parser.add_argument('--monitor', '-m', action='store_true',
-                            default=False)
-        parser.add_argument('--evaluate', action='store_true', default=False)
-        parser.add_argument('--format', default='table',
-                            choices=('table', 'csv'))
-        parser.add_argument('--headers', action='store_true', default=False)
-        parser.add_argument('--board', action='store_true', default=False)
         parser.add_argument('--validation-split', type=float, default=0.15)
 
         return parser.parse_args(args=args)
@@ -50,41 +40,6 @@ class Trainer(object):
         args = [['--%s' % key, value] for key, value in args.items()]
 
         return chain.from_iterable(args)
-
-    def create_baseline(self):
-
-        # create model
-        model = Sequential()
-
-        model.add(Dense(32, input_dim=13, kernel_initializer='normal',
-                        activation='relu'))
-        model.add(BatchNormalization())
-        model.add(PReLU())
-        model.add(Dropout(0.5))
-
-        model.add(Dense(16, kernel_initializer='normal', activation='relu'))
-        model.add(BatchNormalization())
-        model.add(PReLU())
-        model.add(Dropout(0.5))
-
-        model.add(Dense(8, kernel_initializer='normal', activation='relu'))
-        model.add(BatchNormalization())
-        model.add(PReLU())
-        model.add(Dropout(0.5))
-
-        model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
-
-        # Compile model
-        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=[
-            'accuracy'])
-
-        return model
-
-    def read(self):
-        self.model = load_model(os.path.normpath(os.path.join(
-            self.args.indir, 'wincast.model.h5')))
-        self.scaler = joblib.load(os.path.normpath(os.path.join(
-            self.args.indir, 'wincast.scaler.pkl')))
 
     def get_features(self, X):
         return X.loc[:, [
@@ -103,87 +58,82 @@ class Trainer(object):
             'off_h',
         ]]
 
+    def param_search(self, X, y):
+        n_iter = self.args.search_iter
+        param_dist = {
+            'loss': ['log'],
+            'n_iter': [n_iter],
+            'alpha': 10.0**(-np.arange(4,5)),
+            'penalty': ['elasticnet', 'l1', 'l2'],
+            'l1_ratio': 0.2 * np.arange(0,5),
+            'learning_rate': ['constant','optimal', 'invscaling'],
+            'eta0': 0.02 * np.arange(0,4) + 0.01
+        }
+
+        n_iter_search = self.args.search_iter
+        clf = SGDClassifier()
+        search = RandomizedSearchCV(clf, param_distributions=param_dist,
+                                    n_iter=n_iter_search)
+        search.fit(X, y)
+
+        return search.best_params_
+
     def train(self):
         if self.args.indir:
-            self.read()
-            gc.collect()
-            return
+            return self.read()
 
         self.scaler = preprocessing.StandardScaler()
 
         X = pd.read_csv(self.args.playdata)
-        X_train = X.loc[~X['seas'].isin([2001, 2008, 2016])]
-        X_test = X.loc[X['seas'].isin([2001, 2008, 2016])]
+        y = X.loc[:, 'y']
+        X = self.get_features(X)
+        X, y = shuffle(X, y)
 
-        y_train = X_train.loc[:, 'y']
-        y_test = X_test.loc[:, 'y']
+        X = self.scaler.fit_transform(X, y)
+        params = self.param_search(X, y)
 
-        X_train = self.get_features(X_train)
-        X_test = self.get_features(X_test)
+        self.clf = SGDClassifier(**params)
+        X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                            test_size=0.15)
+        self.clf.fit(X_train, y_train)
+        test_acc = self.clf.score(X_test, y_test)
 
-        X_train = self.scaler.fit_transform(X_train, y_train)
-        X_test = self.scaler.transform(X_test)
-
-        X_train, y_train = shuffle(X_train, y_train)
-
-        self.X_train, self.y_train = X_train, y_train
-        self.X_test, self.y_test = X_test, y_test
-
-        self.model = self.create_baseline()
-
-        train_callbacks = []
-
-        if self.args.evaluate:
-            train_callbacks.append(callbacks.CSVLogger(
-                'evaluate/training.csv'))
-
-        if self.args.board:
-            tb_cb = callbacks.TensorBoard(
-                log_dir='evaluate/board/', histogram_freq=0,
-                write_graph=True, write_images=False)
-            train_callbacks.append(tb_cb)
-
-        self.model.fit(X_train, y_train.as_matrix(),
-                       batch_size=self.args.batch_size,
-                       nb_epoch=self.args.nb_epoch,
-                       verbose=self.args.verbose,
-                       callbacks=train_callbacks,
-                       validation_split=self.args.validation_split)
-
-        if self.args.evaluate:
-            self.evaluate(X_test, y_test)
+        print('Test accuracy: %s' % test_acc)
 
         if self.args.outdir:
             self.write()
 
-        gc.collect()
+    def predict_proba(self, X):
+        return self.clf.predict_proba(self.scaler.transform(X))
 
-    def evaluate(self, X, y):
-        evaluation = self.model.evaluate(X, y.as_matrix())
+    def predict(self, X):
+        return self.clf.transform(self.scaler.transform(X))
 
-        with open('evaluate/cv.csv', 'w+') as cv:
-            cv.write(','.join(self.model.metrics_names))
-            cv.write(os.linesep)
-            cv.write(','.join(map(str, evaluation)))
+    def get_data(self):
+        X = pd.read_csv(self.args.playdata)
+        y = X.loc[:, 'y']
+        X = self.get_features(X)
+        X, y = shuffle(X, y)
 
-    def _check_model(self):
-        if not getattr(self, 'model', None):
-            raise AttributeError(
-                'Model has not been trained, call train() before predicting')
+        return X, y
 
-    def predict(self, X, *args, **kwargs):
-        self._check_model()
+    def get_pipeline(self):
+        pipeline = Pipeline(steps=[
+            ('scaler', self.scaler),
+            ('clf', self.clf)
+        ])
 
-        return self.model.predict(self.scaler.transform(X), *args, **kwargs)
+        return pipeline
 
-    def predict_proba(self, X, *args, **kwargs):
-        self._check_model()
-
-        return self.model.predict_proba(self.scaler.transform(X), **kwargs)
+    def read(self):
+        self.clf = joblib.load(os.path.normpath(
+            os.path.join(self.args.indir, 'wincast.clf.pkl')))
+        self.scaler = joblib.load(os.path.normpath(
+            os.path.join(self.args.indir, 'wincast.scaler.pkl')))
 
     def write(self):
-        self.model.save(os.path.normpath(
-            os.path.join(self.args.outdir, 'wincast.model.h5')))
+        joblib.dump(self.clf, os.path.normpath(
+            os.path.join(self.args.outdir, 'wincast.clf.pkl')))
         joblib.dump(self.scaler, os.path.normpath(
             os.path.join(self.args.outdir, 'wincast.scaler.pkl')))
 
