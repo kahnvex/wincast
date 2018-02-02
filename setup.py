@@ -14,7 +14,7 @@ install_requires = [
 
 setup(
     name="wincast",
-    version='0.0.10',
+    version='0.0.11',
     url='https://github.com/kahnjw/wincast',
     author_email='jarrod.kahn+wincast@gmail.com',
     license='MIT',
