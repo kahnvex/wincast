@@ -17,15 +17,11 @@ install_requires = [
     'tabulate==0.7.7',
 ]
 
-with open('README.md', 'r') as f:
-    readme = f.read()
-
 setup(
     name="wincast",
     version='0.0.8',
     url='https://github.com/kahnjw/wincast',
     author_email='jarrod.kahn+wincast@gmail.com',
-    long_description=readme,
     license='MIT',
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=install_requires,
