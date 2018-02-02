@@ -63,11 +63,11 @@ class Trainer(object):
         param_dist = {
             'loss': ['log'],
             'n_iter': [n_iter],
-            'alpha': 10.0**(-np.arange(4,5)),
+            'alpha': 10.0**(-np.arange(4, 5)),
             'penalty': ['elasticnet', 'l1', 'l2'],
-            'l1_ratio': 0.2 * np.arange(0,5),
-            'learning_rate': ['constant','optimal', 'invscaling'],
-            'eta0': 0.02 * np.arange(0,4) + 0.01
+            'l1_ratio': 0.2 * np.arange(0, 5),
+            'learning_rate': ['constant', 'optimal', 'invscaling'],
+            'eta0': 0.02 * np.arange(0, 4) + 0.01
         }
 
         n_iter_search = self.args.search_iter
