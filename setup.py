@@ -5,7 +5,7 @@ install_requires = [
     'dill==0.2.5',
     'easydict==1.6',
     'jsonpickle==0.9.3',
-    'numpy==1.11.2',
+    'numpy==1.14',
     'pandas==0.19.1',
     'scikit-learn==0.18.1',
     'scipy==0.18.1',
