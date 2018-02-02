@@ -2,6 +2,7 @@ import argparse as ap
 import numpy as np
 import pandas as pd
 import os
+import pkg_resources
 
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
@@ -126,10 +127,11 @@ class Trainer(object):
         return pipeline
 
     def read(self):
+        indir = pkg_resources.resource_filename('wincast', self.args.indir)
         self.clf = joblib.load(os.path.normpath(
-            os.path.join(self.args.indir, 'wincast.clf.pkl')))
+            os.path.join(indir, 'wincast.clf.pkl')))
         self.scaler = joblib.load(os.path.normpath(
-            os.path.join(self.args.indir, 'wincast.scaler.pkl')))
+            os.path.join(indir, 'wincast.scaler.pkl')))
 
     def write(self):
         joblib.dump(self.clf, os.path.normpath(
