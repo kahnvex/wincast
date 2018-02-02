@@ -30,6 +30,6 @@ setup(
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=install_requires,
     package_data={
-        'wincast': ['models/wincast.model.h5', 'models/wincast.scaler.pkl']
+        'wincast': ['models/wincast.clf.pkl', 'models/wincast.scaler.pkl']
     }
 )
