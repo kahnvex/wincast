@@ -4,15 +4,14 @@ import pandas as pd
 import os
 import pkg_resources
 
-from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import LogisticRegressionCV
 from sklearn.model_selection import train_test_split
 
 from itertools import chain
-
+from sklearn.metrics import f1_score
 from sklearn import preprocessing
 from sklearn.externals import joblib
 from sklearn.utils import shuffle
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 
 
@@ -59,26 +58,6 @@ class Trainer(object):
             'off_h',
         ]]
 
-    def param_search(self, X, y):
-        n_iter = self.args.search_iter
-        param_dist = {
-            'loss': ['log'],
-            'n_iter': [n_iter],
-            'alpha': 10.0**(-np.arange(4, 5)),
-            'penalty': ['elasticnet', 'l1', 'l2'],
-            'l1_ratio': 0.2 * np.arange(0, 5),
-            'learning_rate': ['constant', 'optimal', 'invscaling'],
-            'eta0': 0.02 * np.arange(0, 4) + 0.01
-        }
-
-        n_iter_search = self.args.search_iter
-        clf = SGDClassifier()
-        search = RandomizedSearchCV(clf, param_distributions=param_dist,
-                                    n_iter=n_iter_search)
-        search.fit(X, y)
-
-        return search.best_params_
-
     def train(self):
         if self.args.indir:
             return self.read()
@@ -91,9 +70,7 @@ class Trainer(object):
         X, y = shuffle(X, y)
 
         X = self.scaler.fit_transform(X, y)
-        params = self.param_search(X, y)
-
-        self.clf = SGDClassifier(**params)
+        self.clf = LogisticRegressionCV()
         X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                             test_size=0.15)
         self.clf.fit(X_train, y_train)

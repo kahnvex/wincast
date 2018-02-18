@@ -1,7 +1,13 @@
 .PHONY: dist
 
+train:
+	pipenv run python3 wincast/train.py
+
+format:
+	pipenv run python3 wincast/format.py
+
 dist:
-	python3 setup.py sdist
+	pipenv run python3 setup.py sdist
 
 pypi:
-	python3 setup.py sdist upload -r pypi
+	pipenv run python3 setup.py sdist upload -r pypi
