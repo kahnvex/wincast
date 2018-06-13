@@ -7,12 +7,17 @@ name = "pypi"
 
 [packages]
 
-bpython = "==0.16"
+bpython = "*"
 numpy = "==1.14"
 pandas = "==0.19.1"
-scikit-learn = "==0.18.1"
+scikit-learn = "*"
 tabulate = "==0.7.7"
 scipy = "*"
+jupyter = "*"
+"pymc3" = "*"
+matplotlib = "*"
+theano = "*"
+seaborn = "*"
 
 
 [dev-packages]

@@ -69,10 +69,12 @@ class Trainer(object):
         X = self.get_features(X)
         X, y = shuffle(X, y)
 
-        X = self.scaler.fit_transform(X, y)
         self.clf = LogisticRegressionCV()
         X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                             test_size=0.15)
+
+        X_train = self.scaler.fit_transform(X_train, y_train)
+        X_test = self.scaler.transform(X_test, y_test)
         self.clf.fit(X_train, y_train)
         test_acc = self.clf.score(X_test, y_test)
 
